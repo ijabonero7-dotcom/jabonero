@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Ivan's Haunted Website</title>
+<style>
+    /* Prevent scrolling and handle mobile height properly */
+    html, body {
+        margin: 0;
+        padding: 0;
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+        background: black;
+        color: white;
+        font-family: Arial, sans-serif;
+    }
+
+    body {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        text-align: center;
+    }
+
+    #confetti-canvas {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        pointer-events: none;
+        z-index: 3000;
+    }
+
+    .container {
+        opacity: 0;
+        animation: fadeIn 1.5s ease forwards;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        z-index: 10;
+        width: 90%;
+        max-width: 600px;
+    }
+
+    h1 { 
+        /* Scalable font size based on screen width */
+        font-size: clamp(1.8rem, 8vw, 3rem); 
+        letter-spacing: 2px; 
+        margin: 10px 0;
+        opacity: 0; 
+        animation: glowFade 1.5s ease forwards; 
+        animation-delay: 1s; 
+    }
+
+    h2 { 
+        font-size: clamp(1rem, 4vw, 1.5rem);
+        margin-top: 10px; 
+        font-weight: normal; 
+        opacity: 0; 
+        animation: fadeIn 1.5s ease forwards; 
+        animation-delay: 2s; 
+    }
+
+    .btn-style { 
+        padding: 15px 30px; 
+        font-size: 18px; 
+        border: none; 
+        border-radius: 12px; /* Smoother for mobile */
+        cursor: pointer; 
+        background-color: #00ff88; 
+        color: black; 
+        font-weight: bold;
+        text-transform: uppercase;
+        box-shadow: 0 0 10px #00ff88, 0 0 20px #00ff88;
+        text-shadow: 0 0 5px #00ff88;
+        animation: pulse 1.5s infinite alternate; 
+        -webkit-tap-highlight-color: transparent; /* Clean mobile tap */
+    }
+
+    #button-row {
+        display: flex;
+        flex-direction: row;
+        gap: 20px;
+        justify-content: center;
+        align-items: flex-end;
+        margin-top: 40px;
+        opacity: 0;
+        animation: fadeIn 1.5s ease forwards;
+        animation-delay: 3.5s;
+        height: 150px; /* Space for the bubble above the NO button */
+        width: 100%;
+    }
+
+    #no-btn-container {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        z-index: 999;
+        /* Prevent container from being too wide */
+        min-width: 120px; 
+    }
+
+    #speech-bubble {
+        background: white;
+        color: black;
+        padding: 6px 12px;
+        border-radius: 10px;
+        font-size: 13px;
+        font-weight: bold;
+        margin-bottom: 8px;
+        opacity: 0;
+        transition: opacity 0.2s;
+        white-space: nowrap;
+        pointer-events: none;
+    }
+
+    #donation-screen {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100vw;
+        height: 100vh;
+        background: radial-gradient(circle, #1a1a1a, black);
+        display: none; 
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        z-index: 2000;
+        opacity: 0;
+        transition: opacity 1s ease;
+        padding: 20px;
+        box-sizing: border-box;
+    }
+
+    .qr-code {
+        width: 100%;
+        max-width: 250px; /* Looks good on both desktop and mobile */
+        height: auto;
+        border: 5px solid #00ff88;
+        border-radius: 15px;
+        margin: 20px 0;
+        box-shadow: 0 0 30px #00ff88;
+    }
+
+    @keyframes scaredShake {
+        0% { transform: translate(0, 0) rotate(0deg); }
+        20% { transform: translate(-8px, 2px) rotate(-4deg); }
+        40% { transform: translate(8px, -2px) rotate(4deg); }
+        60% { transform: translate(-8px, -2px) rotate(-4deg); }
+        80% { transform: translate(8px, 2px) rotate(4deg); }
+        100% { transform: translate(0, 0) rotate(0deg); }
+    }
+
+    .scared-anim {
+        animation: scaredShake 0.1s ease-in-out infinite !important;
+    }
+
+    .ghost {
+        position: absolute;
+        width: 15vw; /* Ghost size scales with screen */
+        min-width: 80px;
+        opacity: 0;
+        animation: slideGhost 6s forwards;
+        pointer-events: none;
+    }
+    #ghost1 { top: 10%; animation-delay: 1s; }
+    #ghost2 { top: 40%; animation-delay: 3s; }
+    #ghost3 { top: 70%; animation-delay: 5s; }
+
+    @keyframes fadeIn { to { opacity: 1; } }
+    @keyframes glowFade { 
+        0% { opacity: 0; text-shadow: 0 0 5px red; } 
+        100% { opacity: 1; text-shadow: 0 0 25px crimson; } 
+    }
+    @keyframes pulse { 
+        0% { transform: scale(1); } 
+        100% { transform: scale(1.05); } 
+    }
+    @keyframes slideGhost { 
+        0% { left: -150px; opacity: 0; } 
+        80% { left: 110%; opacity: 1; } 
+        100% { left: 110%; opacity: 0; } 
+    }
+</style>
+</head>
+<body>
+
+<canvas id="confetti-canvas"></canvas>
+
+<audio id="spooky-audio" src="images/spooky.mp3"></audio>
+<audio id="no-sound" src="images/nonono.mp3"></audio>
+<audio id="yey-sound" src="images/yey.mp3"></audio>
+
+<div class="container" id="haunted-container">
+    <h1 id="main-title">Welcome to Ivan's Haunted Website</h1>
+    <h2 id="main-subtitle">Please click NEXT if you want to proceed</h2>
+    <div style="margin-top: 30px; opacity: 0; animation: fadeIn 1.5s ease forwards; animation-delay: 4.5s;">
+        <button class="btn-style" onclick="proceed()">NEXT</button>
+    </div>
+</div>
+
+<div id="donation-screen">
+    <h1 style="color: #00ff88; text-shadow: 0 0 10px #00ff88;">THANK YOU!</h1>
+    <p style="font-size: 1.1rem; margin: 5px;">The spirits appreciate your generosity.</p>
+    <img src="images/gcash.jpg" alt="GCash QR Code" class="qr-code">
+    <button class="btn-style" onclick="location.reload()" style="margin-top: 10px; font-size: 14px;">Back to start</button>
+</div>
+
+<img src="images/ghost.gif" alt="Ghost" class="ghost" id="ghost1">
+<img src="images/ghost.gif" alt="Ghost" class="ghost" id="ghost2">
+<img src="images/ghost.gif" alt="Ghost" class="ghost" id="ghost3">
+
+<script>
+    let clickCount = 0;
+    let isMoving = false;
+    const messages = ["NOOO PLEASE!", "STAY AWAY!", "STOP IT!", "I'M BEGGING YOU!", "FINE, YOU WIN..."];
+
+    function proceed() {
+        const audio = document.getElementById('spooky-audio');
+        audio.play().catch(e => console.log("Interaction required."));
+
+        const container = document.getElementById('haunted-container');
+        container.style.transition = "opacity 0.8s ease";
+        container.style.opacity = '0';
+        
+        setTimeout(() => {
+            container.innerHTML = `
+                <h1 id="toll-header" style="color: white; text-shadow: 0 0 15px crimson;">THE TOLL...</h1>
+                <h2 id="toll-text">Can you give me your GCash?</h2>
+                <div id="button-row">
+                    <button id="yes-btn" class="btn-style" onclick="showQR()">YES</button>
+                    <div id="no-btn-container">
+                        <div id="speech-bubble">HEY!</div>
+                        <button id="no-btn" class="btn-style" onclick="noClicked()">NO</button>
+                    </div>
+                </div>
+            `;
+            container.style.opacity = '1';
+        }, 800);
+    }
+
+    function showQR() {
+        const yeyAudio = document.getElementById('yey-sound');
+        yeyAudio.currentTime = 0;
+        yeyAudio.play().catch(e => {});
+
+        const qrScreen = document.getElementById('donation-screen');
+        qrScreen.style.display = 'flex';
+        setTimeout(() => {
+            qrScreen.style.opacity = '1';
+            startConfetti(); 
+        }, 50);
+    }
+
+    function startConfetti() {
+        const canvas = document.getElementById('confetti-canvas');
+        const ctx = canvas.getContext('2d');
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+
+        let particles = [];
+        const colors = ['#00ff88', '#ffffff', '#ff0055', 'gold', '#00e5ff'];
+
+        for (let i = 0; i < 150; i++) {
+            particles.push({
+                x: Math.random() * canvas.width,
+                y: Math.random() * canvas.height - canvas.height,
+                size: Math.random() * 8 + 4,
+                color: colors[Math.floor(Math.random() * colors.length)],
+                speed: Math.random() * 3 + 2,
+                angle: Math.random() * 6.28
+            });
+        }
+
+        function draw() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            particles.forEach((p, i) => {
+                p.y += p.speed;
+                p.x += Math.sin(p.angle) * 2;
+                ctx.fillStyle = p.color;
+                ctx.fillRect(p.x, p.y, p.size, p.size);
+                if (p.y > canvas.height) particles[i].y = -20;
+            });
+            requestAnimationFrame(draw);
+        }
+        draw();
+    }
+
+    function moveButton() {
+        const cont = document.getElementById('no-btn-container');
+        const yesBtn = document.getElementById('yes-btn');
+        const tollText = document.getElementById('toll-text');
+        
+        const yesRect = yesBtn.getBoundingClientRect();
+        const textRect = tollText.getBoundingClientRect();
+
+        cont.style.position = 'fixed';
+        cont.style.transition = 'all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275)';
+
+        let randomX, randomY;
+        let safe = false;
+        let attempts = 0;
+
+        // Button dimensions for mobile
+        const btnWidth = 120; 
+        const btnHeight = 100;
+
+        while (!safe && attempts < 50) {
+            attempts++;
+            // Calculate random position keeping it inside the screen
+            randomX = Math.random() * (window.innerWidth - btnWidth - 40) + 20;
+            randomY = Math.random() * (window.innerHeight - btnHeight - 60) + 30;
+
+            // Avoid overlapping the YES button
+            const overlapYes = (randomX < yesRect.right + 20 && randomX + btnWidth > yesRect.left - 20 &&
+                                randomY < yesRect.bottom + 20 && randomY + btnHeight > yesRect.top - 20);
+
+            // Avoid overlapping the Text
+            const overlapText = (randomX < textRect.right + 20 && randomX + btnWidth > textRect.left - 20 &&
+                                 randomY < textRect.bottom + 20 && randomY + btnHeight > textRect.top - 20);
+
+            if (!overlapYes && !overlapText) safe = true;
+        }
+        
+        cont.style.left = randomX + 'px';
+        cont.style.top = randomY + 'px';
+    }
+
+    function noClicked() {
+        if (isMoving) return;
+        const noAudio = document.getElementById('no-sound');
+        noAudio.currentTime = 0;
+        noAudio.play().catch(e => {});
+        
+        const cont = document.getElementById('no-btn-container');
+        const bubble = document.getElementById('speech-bubble');
+        const btn = document.getElementById('no-btn');
+        
+        if (clickCount < 5) {
+            isMoving = true;
+            bubble.innerText = messages[clickCount];
+            bubble.style.opacity = '1';
+            cont.classList.add('scared-anim');
+
+            setTimeout(() => {
+                moveButton();
+                clickCount++;
+                setTimeout(() => {
+                    cont.classList.remove('scared-anim');
+                    bubble.style.opacity = '0';
+                    isMoving = false;
+                    if (clickCount === 5) {
+                        btn.innerText = "YES";
+                        btn.style.backgroundColor = "gold";
+                        btn.style.boxShadow = "0 0 20px gold";
+                        btn.onclick = showQR;
+                    }
+                }, 400); 
+            }, 600);
+        }
+    }
+
+    // Reset canvas on resize to keep it mobile friendly
+    window.addEventListener('resize', () => {
+        const canvas = document.getElementById('confetti-canvas');
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+    });
+</script>
+
+</body>
+</html>
